@@ -4,7 +4,7 @@
 
 # Grupo 25:
 # 102571 Francisco Gouveia
-# 00000 Rui Amaral
+# 103155 Rui Amaral
 
 import sys
 from search import (
@@ -104,16 +104,27 @@ class Bimaru(Problem):
 
     # TODO: outros metodos da classe
 
-
-if __name__ == "__main__":
+def read_input():
     row_input = input()
+    row_ptr = 4
+    for i in range(10):
+        rows.append(int(row_input[row_ptr]))
+        row_ptr += 2
     column_input = input()
+    col_init = 7
+    for i in range(10):
+        columns.append(int(column_input[col_init]))
+        col_init += 2
     num_hints = int(input())
-    hints = []
     for i in range(num_hints):
         new_hint = input()
         new_hint = (int(new_hint[5]), int(new_hint[7]), new_hint[9])
         hints.append(new_hint)
+
+
+if __name__ == "__main__":
+    rows, columns, hints = [], [], []
+    read_input()
     # TODO:
     # Ler o ficheiro do standard input,
     # Usar uma técnica de procura para resolver a instância,
