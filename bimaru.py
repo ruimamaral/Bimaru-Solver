@@ -44,6 +44,7 @@ class Board:
             -> 'r' = right
             -> 'm' = middle
             -> '.' = none (a.k.a. empty)
+            Se algum dos símbolos for upper_case então é de uma hint.
         """
         self.board = matrix
         self.rows = rows
@@ -66,7 +67,16 @@ class Board:
         respectivamente."""
         # TODO
         pass
-    
+        
+    def use_hints(self):
+        """Completa o tabuleiro com as informações dadas nas pistas."""
+        num_hints = len(self.hints)
+        for i in range(num_hints):
+            row = self.hints[i][0]
+            column = self.hints[i][1]
+            letter = self.hints[i][2]
+            self.board[row, column] = letter
+
     def print(self):
         for i in range(10):
             for j in range(10):
@@ -133,7 +143,8 @@ class Bimaru(Problem):
 
 if __name__ == "__main__":
     my_board = Board.parse_instance()
-    my_board.print()
+    my_board.use_hints()
+
     # TODO:
     # Ler o ficheiro do standard input,
     # Usar uma técnica de procura para resolver a instância,
