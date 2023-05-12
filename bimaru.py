@@ -43,7 +43,7 @@ class Board:
             -> 'l' = left
             -> 'r' = right
             -> 'm' = middle
-            -> '0' = none (a.k.a. empty)
+            -> '.' = none (a.k.a. empty)
         """
         self.board = matrix
         self.rows = rows
@@ -66,6 +66,12 @@ class Board:
         respectivamente."""
         # TODO
         pass
+    
+    def print(self):
+        for i in range(10):
+            for j in range(10):
+                print(self.board[i,j], end='')
+            print()
 
     @staticmethod
     def parse_instance():
@@ -86,7 +92,7 @@ class Board:
             new_hint = (int(new_hint[5]), int(new_hint[7]), new_hint[9])
             hints.append(new_hint)
         # Create a matrix to represent the board and return a Board object
-        matrix = np.full((10,10), '0')
+        matrix = np.full((10,10), '.')
         return Board(matrix, rows, columns, hints)
 
 
@@ -123,11 +129,11 @@ class Bimaru(Problem):
         # TODO
         pass
     
-    # def print(self):
     # TODO: outros metodos da classe
 
 if __name__ == "__main__":
     my_board = Board.parse_instance()
+    my_board.print()
     # TODO:
     # Ler o ficheiro do standard input,
     # Usar uma técnica de procura para resolver a instância,
