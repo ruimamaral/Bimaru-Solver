@@ -7,6 +7,7 @@
 # 103155 Rui Amaral
 
 import sys
+import numpy as np
 from search import (
     Problem,
     Node,
@@ -34,6 +35,20 @@ class BimaruState:
 
 class Board:
     """Representação interna de um tabuleiro de Bimaru."""
+    def __init__(self, matrix, rows, columns, hints):
+        """Construtor para o tabuleiro e informação necessária
+            -> 'w' = water
+            -> 't' = top
+            -> 'b' = bottom
+            -> 'l' = left
+            -> 'r' = right
+            -> 'm' = middle
+            -> '0' = none (a.k.a. empty)
+        """
+        self.board = matrix
+        self.rows = rows
+        self.columns = columns
+        self.hints = hints
 
     def get_value(self, row: int, col: int) -> str:
         """Devolve o valor na respetiva posição do tabuleiro."""
@@ -54,19 +69,25 @@ class Board:
 
     @staticmethod
     def parse_instance():
-        """Lê o test do standard input (stdin) que é passado como argumento
-        e retorna uma instância da classe Board.
-
-        Por exemplo:
-            $ python3 bimaru.py < input_T01
-
-            > from sys import stdin
-            > line = stdin.readline().split()
-        """
-        # TODO
-        pass
-
-    # TODO: outros metodos da classe
+        rows, columns, hints = [], [], []
+        row_input = input()
+        row_ptr = 4
+        for i in range(10):
+            rows.append(int(row_input[row_ptr]))
+            row_ptr += 2
+        column_input = input()
+        col_init = 7
+        for i in range(10):
+            columns.append(int(column_input[col_init]))
+            col_init += 2
+        num_hints = int(input())
+        for i in range(num_hints):
+            new_hint = input()
+            new_hint = (int(new_hint[5]), int(new_hint[7]), new_hint[9])
+            hints.append(new_hint)
+        # Create a matrix to represent the board and return a Board object
+        matrix = np.full((10,10), '0')
+        return Board(matrix, rows, columns, hints)
 
 
 class Bimaru(Problem):
@@ -101,30 +122,12 @@ class Bimaru(Problem):
         """Função heuristica utilizada para a procura A*."""
         # TODO
         pass
-
+    
+    # def print(self):
     # TODO: outros metodos da classe
 
-def read_input():
-    row_input = input()
-    row_ptr = 4
-    for i in range(10):
-        rows.append(int(row_input[row_ptr]))
-        row_ptr += 2
-    column_input = input()
-    col_init = 7
-    for i in range(10):
-        columns.append(int(column_input[col_init]))
-        col_init += 2
-    num_hints = int(input())
-    for i in range(num_hints):
-        new_hint = input()
-        new_hint = (int(new_hint[5]), int(new_hint[7]), new_hint[9])
-        hints.append(new_hint)
-
-
 if __name__ == "__main__":
-    rows, columns, hints = [], [], []
-    read_input()
+    my_board = Board.parse_instance()
     # TODO:
     # Ler o ficheiro do standard input,
     # Usar uma técnica de procura para resolver a instância,
