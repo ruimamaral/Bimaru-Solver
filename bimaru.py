@@ -53,21 +53,28 @@ class Board:
 
     def get_value(self, row: int, col: int) -> str:
         """Devolve o valor na respetiva posição do tabuleiro."""
-        # TODO
-        pass
+        return self.board[row, col]
 
     def adjacent_vertical_values(self, row: int, col: int) -> (str, str):
         """Devolve os valores imediatamente acima e abaixo,
         respectivamente."""
-        # TODO
-        pass
+        if row == 0:
+            return (None, self.board[row+1, col])
+        elif row == 9:
+            return (self.board[row-1, col], None)
+        else:
+            return (self.board[row-1, col], self.board[row+1, col])
 
     def adjacent_horizontal_values(self, row: int, col: int) -> (str, str):
         """Devolve os valores imediatamente à esquerda e à direita,
         respectivamente."""
-        # TODO
-        pass
-        
+        if col == 0:
+            return (None, self.board[row, col+1])
+        elif col == 9:
+            return (self.board[row, col-1], None)
+        else:
+            return (self.board[row, col-1], self.board[row, col+1])
+
     def use_hints(self):
         """Completa o tabuleiro com as informações dadas nas pistas."""
         num_hints = len(self.hints)
