@@ -84,10 +84,54 @@ class Board:
             letter = self.hints[i][2]
             self.board[row, column] = letter
 
+    def get_num_ships_in_row(self, row: int) -> int:
+        """Retorna o número de navios numa determinada linha."""
+        count = 0
+        for i in range(10):
+            if self.board[row, i] in ('t', 'b', 'l', 'r', 'm'):
+                count += 1
+        return count
+    
+    def get_num_ships_in_column(self, column: int) -> int:
+        """Retorna o número de navios numa determinada coluna."""
+        count = 0
+        for i in range(10):
+            if self.board[i, column] in ('t', 'b', 'l', 'r', 'm'):
+                count += 1
+        return count
+
+    def complete_row_with_water(self, row: int):
+        """Completa uma linha do tabuleiro com zeros onde estaria None."""
+        for i in range(10):
+            if self.board[row, i] is None:
+                self.board[row, i] = '.'
+    
+    def complete_column_with_water(self, column: int):
+        """Completa uma coluna do tabuleiro com zeros onde estaria None."""
+        for i in range(10):
+            if self.board[i, column] is None:
+                self.board[i, column] = '.'
+
+
+    def complete_board_after_hints(self):
+        """Completa o tabuleiro a partir de conclusões que pode tirar
+        através das listas rows e columns, e das hints dadas."""
+        # Itera sobre linhas
+        for i in range(10):
+            if self.get_num_ships_in_row(i) == self.rows[i]:
+                self.complete_row_with_water(i)
+        # Itera sobre colunas
+        for i in range(10):
+            if self.get_num_ships_in_column(i) == self.columns[i]:
+                self.complete_column_with_water(i)
+        # Bloqueia espaço ao lado dos barcos
+
+
+
     def print(self):
         for i in range(10):
             for j in range(10):
-                print(self.board[i,j], end='')
+                print(self.board[i,j], end=' ')
             print()
 
     @staticmethod
@@ -109,7 +153,7 @@ class Board:
             new_hint = (int(new_hint[5]), int(new_hint[7]), new_hint[9])
             hints.append(new_hint)
         # Create a matrix to represent the board and return a Board object
-        matrix = np.full((10,10), '.')
+        matrix = np.full((10,10), None)
         return Board(matrix, rows, columns, hints)
 
 
@@ -151,10 +195,10 @@ class Bimaru(Problem):
 if __name__ == "__main__":
     my_board = Board.parse_instance()
     my_board.use_hints()
-
+    my_board.complete_board_after_hints()
+    my_board.print()
     # TODO:
     # Ler o ficheiro do standard input,
     # Usar uma técnica de procura para resolver a instância,
     # Retirar a solução a partir do nó resultante,
     # Imprimir para o standard output no formato indicado.
-    pass
