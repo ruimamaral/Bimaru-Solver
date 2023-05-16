@@ -50,6 +50,8 @@ class Board:
         self.rows = rows
         self.columns = columns
         self.hints = hints
+        self.my_rows = [0] * 10
+        self.my_columns = [0] * 10
 
     def get_value(self, row: int, col: int) -> str:
         """Devolve o valor na respetiva posição do tabuleiro."""
@@ -83,23 +85,18 @@ class Board:
             column = self.hints[i][1]
             letter = self.hints[i][2]
             self.board[row, column] = letter
+            if letter in ('t', 'b', 'l', 'r', 'm'):
+                self.my_rows[row] += 1
+                self.my_columns[column] += 1
 
     def get_num_ships_in_row(self, row: int) -> int:
         """Retorna o número de navios numa determinada linha."""
-        count = 0
-        for i in range(10):
-            if self.board[row, i] in ('t', 'b', 'l', 'r', 'm'):
-                count += 1
-        return count
-    
+        return self.my_rows[row]
+            
     def get_num_ships_in_column(self, column: int) -> int:
         """Retorna o número de navios numa determinada coluna."""
-        count = 0
-        for i in range(10):
-            if self.board[i, column] in ('t', 'b', 'l', 'r', 'm'):
-                count += 1
-        return count
-
+        return self.my_columns[column]
+        
     def complete_row_with_water(self, row: int):
         """Completa uma linha do tabuleiro com zeros onde estaria None."""
         for i in range(10):
@@ -125,7 +122,6 @@ class Board:
             if self.get_num_ships_in_column(i) == self.columns[i]:
                 self.complete_column_with_water(i)
         # Bloqueia espaço ao lado dos barcos
-
 
 
     def print(self):
