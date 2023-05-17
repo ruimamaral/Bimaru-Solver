@@ -37,13 +37,14 @@ class Board:
     """Representação interna de um tabuleiro de Bimaru."""
     def __init__(self, matrix, rows, columns, hints):
         """Construtor para o tabuleiro e informação necessária
-            -> 'w' = water
+            -> '.' = water
             -> 't' = top
             -> 'b' = bottom
             -> 'l' = left
             -> 'r' = right
             -> 'm' = middle
-            -> '.' = none (a.k.a. empty)
+            -> 'c' = circle
+            -> 'None' = none (a.k.a. empty)
             Se algum dos símbolos for upper_case então é de uma hint.
         """
         self.board = matrix
@@ -84,10 +85,10 @@ class Board:
             row = self.hints[i][0]
             column = self.hints[i][1]
             letter = self.hints[i][2]
-            self.board[row, column] = letter
-            if letter in ('t', 'b', 'l', 'r', 'm'):
+            if letter in ('T', 'B', 'L', 'R', 'M', 'C'):
                 self.my_rows[row] += 1
                 self.my_columns[column] += 1
+            self.board[row, column] = letter
 
     def get_num_ships_in_row(self, row: int) -> int:
         """Retorna o número de navios numa determinada linha."""
@@ -122,12 +123,15 @@ class Board:
             if self.get_num_ships_in_column(i) == self.columns[i]:
                 self.complete_column_with_water(i)
         # Bloqueia espaço ao lado dos barcos
-
+        
 
     def print(self):
         for i in range(10):
             for j in range(10):
-                print(self.board[i,j], end=' ')
+                if self.board[i,j] is not None:
+                    print(self.board[i,j], end='')
+                else:
+                    print('*', end='')
             print()
 
     @staticmethod
@@ -150,7 +154,9 @@ class Board:
             hints.append(new_hint)
         # Create a matrix to represent the board and return a Board object
         matrix = np.full((10,10), None)
-        return Board(matrix, rows, columns, hints)
+        my_board = Board(matrix, rows, columns, hints)
+        my_board.use_hints()
+        return my_board
 
 
 class Bimaru(Problem):
@@ -190,7 +196,6 @@ class Bimaru(Problem):
 
 if __name__ == "__main__":
     my_board = Board.parse_instance()
-    my_board.use_hints()
     my_board.complete_board_after_hints()
     my_board.print()
     # TODO:
