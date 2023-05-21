@@ -56,6 +56,7 @@ class Board:
         self.my_rows = [0] * 10
         self.my_columns = [0] * 10
         self.incomplete_hints = 0
+        self.remaining_ships = [-1, 4, 3, 2, 1]
 
     def get_value(self, row: int, col: int) -> str:
         """Devolve o valor na respetiva posição do tabuleiro."""
@@ -84,16 +85,53 @@ class Board:
     def use_hints(self, hints):
         """Completa o tabuleiro com as informações dadas nas pistas."""
         num_hints = len(hints)
+        # Sorts the hints by row and column
+        hints.sort(key=lambda hint: hint[0] * 10 + hint[1])
+
         for i in range(num_hints):
             row = hints[i][0]
             column = hints[i][1]
             letter = hints[i][2]
+
             if letter in ('T', 'B', 'L', 'R', 'M', 'C'):
+                self.board[row, column] = letter
                 self.my_rows[row] += 1
                 self.my_columns[column] += 1
                 self.incomplete_hints += 1
                 self.fill_surrounding_water(row, column, letter)
-            self.board[row, column] = letter
+
+                if letter is 'C':
+                    self.remaining_ships[1] -= 1
+                    self.incomplete_hints -= 1
+
+                # Checks whether we have completed a ship horizontally
+                elif letter is 'R':
+                    length = 1
+                    while letter in ('R', 'L', 'M'):
+                        if (column - length <= 0): break
+
+                        letter = self.board[row, column - length]
+
+                        if letter is 'L':
+                            self.remaining_ships[length] -= 1
+                            self.incomplete_hints -= length
+                            break
+                        length += 1
+
+                # Checks whether we have completed a ship vertically
+                elif letter is 'B':
+                    length = 1
+                    while letter in ('B', 'T', 'M'):
+                        if (row - length <= 0): break
+
+                        letter = self.board[row - length, column]
+
+                        if letter is 'T':
+                            self.remaining_ships[length] -= 1
+                            self.incomplete_hints -= length
+                            break
+                        length += 1
+                
 
     def fill_surrounding_water(self, row, column, letter):
         """Fills in the squares around a given ship part with water"""
@@ -135,7 +173,12 @@ class Board:
     
     def get_actions(self):
         """Finds all possible actions for the current board."""
-        
+        actions = [];
+        for row in range(self.rows.size()):
+            self.my_rows[row] == self.rows[row]
+            for col in range(self.columns.size()):
+
+
 
     def print(self):
         for i in range(10):
@@ -166,8 +209,8 @@ class Board:
             hints.append(new_hint)
         # Create a matrix to represent the board and return a Board object
         matrix = np.full((10,10), None)
-        my_board = Board(matrix, rows, columns, hints)
-        my_board.use_hints()
+        my_board = Board(matrix, rows, columns)
+        my_board.use_hints(hints)
         return my_board
 
 
