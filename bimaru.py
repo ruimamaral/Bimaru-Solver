@@ -29,13 +29,16 @@ class BimaruState:
 
     def __lt__(self, other):
         return self.id < other.id
+    
+    def actions(self):
+        return self.board.get_actions()
 
     # TODO: outros metodos da classe
 
 
 class Board:
     """Representação interna de um tabuleiro de Bimaru."""
-    def __init__(self, matrix, rows, columns, hints):
+    def __init__(self, matrix, rows, columns):
         """Construtor para o tabuleiro e informação necessária
             -> '.' = water
             -> 't' = top
@@ -50,9 +53,9 @@ class Board:
         self.board = matrix
         self.rows = rows
         self.columns = columns
-        self.hints = hints
         self.my_rows = [0] * 10
         self.my_columns = [0] * 10
+        self.incomplete_hints = 0
 
     def get_value(self, row: int, col: int) -> str:
         """Devolve o valor na respetiva posição do tabuleiro."""
@@ -78,17 +81,23 @@ class Board:
         else:
             return (self.board[row, col-1], self.board[row, col+1])
 
-    def use_hints(self):
+    def use_hints(self, hints):
         """Completa o tabuleiro com as informações dadas nas pistas."""
-        num_hints = len(self.hints)
+        num_hints = len(hints)
         for i in range(num_hints):
-            row = self.hints[i][0]
-            column = self.hints[i][1]
-            letter = self.hints[i][2]
+            row = hints[i][0]
+            column = hints[i][1]
+            letter = hints[i][2]
             if letter in ('T', 'B', 'L', 'R', 'M', 'C'):
                 self.my_rows[row] += 1
                 self.my_columns[column] += 1
+                self.incomplete_hints += 1
+                self.fill_surrounding_water(row, column, letter)
             self.board[row, column] = letter
+
+    def fill_surrounding_water(self, row, column, letter):
+        """Fills in the squares around a given ship part with water"""
+        #TODO 
 
     def get_num_ships_in_row(self, row: int) -> int:
         """Retorna o número de navios numa determinada linha."""
@@ -123,6 +132,9 @@ class Board:
             if self.get_num_ships_in_column(i) == self.columns[i]:
                 self.complete_column_with_water(i)
         # Bloqueia espaço ao lado dos barcos
+    
+    def get_actions(self):
+        """Finds all possible actions for the current board."""
         
 
     def print(self):
@@ -169,7 +181,7 @@ class Bimaru(Problem):
     def actions(self, state: BimaruState):
         """Retorna uma lista de ações que podem ser executadas a
         partir do estado passado como argumento."""
-        # TODO
+
         pass
 
     def result(self, state: BimaruState, action):
