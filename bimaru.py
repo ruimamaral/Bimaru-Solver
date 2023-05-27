@@ -41,12 +41,17 @@ class BimaruState:
     def actions(self):
         return self.board.get_actions()
 
+    def take_action(self, action):
+        new_board = self.board.copy()
+        new_board.place_ship(action)
+        return BimaruState(new_board)
+
     # TODO: outros metodos da classe
 
 
 class Board:
     """Representação interna de um tabuleiro de Bimaru."""
-    def __init__(self, matrix, rows, columns, hints):
+    def __init__(self, matrix, rows, columns, hints, remaining_ships = [-1, 4, 3, 2, 1], my_rows = [0] * 10, my_columns = [0] * 10):
         """Construtor para o tabuleiro e informação necessária
             -> '.' = water
             -> 't' = top
@@ -61,11 +66,11 @@ class Board:
         self.board = matrix
         self.rows = rows
         self.columns = columns
-        self.my_rows = [0] * 10
-        self.my_columns = [0] * 10
-        self.incomplete_hints = 0
-        self.remaining_ships = [-1, 4, 3, 2, 1]
+        self.my_rows = my_rows
+        self.my_columns = my_columns
+        self.remaining_ships = remaining_ships
         self.hints = hints;
+        self.current_ship_size = next((size for size, count in reversed(list(enumerate(self.remaining_ships))) if count > 0), None);
 
     def get_value(self, row: int, col: int) -> str:
         """Devolve o valor na respetiva posição do tabuleiro."""
@@ -179,9 +184,12 @@ class Board:
         for i in range(10):
             self.try_place('.', i, column)
 
+    def is_free(self, row, column):
+        return self.matrix[row, column] is None
+
     def try_place(self, letter, row, column):
         """Places a water tile on the given position."""
-        if (self.board[row, column] is None):
+        if (self.is_free(row, column)):
             self.board[row, column] = letter;
 
     def complete_board_after_hints(self):
@@ -200,27 +208,81 @@ class Board:
     def get_actions(self):
         """Finds all possible actions for the current board."""
         actions = [];
-        """for row in range(self.rows.size()):
-            parts = self.rows[row] - self.my_rows[row];
-            if (parts <= 0): continue
-            for col in range(self.columns.size()):
-                remaining = parts
-                size = 1
-                letter = self.board[row][col]
-                if (letter in ['W', '.', 'R', 'M']): continue
-                if (self.board[row][col - 2] is 'L'
-                        or self.board[row][col - 1] is 'M'
-                        or self.board[row][col - 2] is 'M'
-                        and self.board[row][col - 3] in ['M', 'L']): continue
-                if (letter is 'L') {
-                    size = 2
-                }"""
-                    
+        free_tiles = 0;
+
+        # check horizontal ship positions
+        for row in range(10):
+            if self.rows - self.my_rows < self.current_ship_size:
+                continue
+            for col in reversed(range(10)):
+                if self.is_free(row, col):
+                    free_tiles += 1
+                else:
+                    free_tiles = 0
+                if free_tiles >= self.current_ship_size:
+                    actions.append("H", row, col)
+
+        # check vertical ship positions
+        for col in range(10):
+            if self.columns - self.my_columns < self.current_ship_size:
+                continue
+            for row in reversed(range(10)):
+                if self.is_free(row, col):
+                    free_tiles += 1
+                else:
+                    free_tiles = 0
+                if free_tiles >= self.current_ship_size:
+                    actions.append("V", row, col)
+        return actions
+
+    def place_part(self, part, row, col):
+        self.try_place(part, row, col)
+
+        self.fill_surrounding_water(row, col, part)
+
+        self.my_rows[row] += 1
+        self.my_columns[col] += 1
+
+        if (self.my_rows[row] == self.rows[row]):
+            self.complete_row_with_water(row)
+        if (self.my_columns[row] == self.columns[col]):
+            self.complete_column_with_water(col)
+
+
+    def place_ship(self, orientation, row, col):
+
+        self.remaining_ships[self.current_ship_size] -= 1
+        
+        if self.current_ship_size == 1:
+            self.place_part('C', row, col)
+            return
+
+        h_offset = 0
+        v_offset = 0
+        placed = 2
+
+        if orientation == "V":
+            v_offset = 1
+            self.place_part('T', row, col)
+            end = 'B'
+        else:
+            h_offset = 1
+            self.place_part('L', row, col)
+            end = 'R'
+
+        while placed < self.current_ship_size:
+            row += v_offset 
+            col += h_offset 
+            self.place_part('M', row, col)
+
+        self.place_part(end, row + v_offset, col + h_offset)
+
+
     def print(self):
         for i in range(10):
             for j in range(10):
-                if self.board[i,j] is not None:
-                    print(self.board[i,j], end='')
+                if self.board[i, j] is not None:
+                    print(self.board[i, j], end='')
                 else:
                     print('*', end='')
             print()
@@ -248,7 +310,7 @@ class Board:
             new_hint = (int(new_hint[5]), int(new_hint[7]), new_hint[9])
             hints.append(new_hint)
         # Create a matrix to represent the board and return a Board object
-        matrix = np.full((10,10), None)
+        matrix = np.full((10, 10), None)
         my_board = Board(matrix, rows, columns, hints)
         my_board.use_hints()
         return my_board
