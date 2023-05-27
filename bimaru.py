@@ -43,7 +43,7 @@ class BimaruState:
 
     def take_action(self, action):
         new_board = self.board.copy()
-        new_board.place_ship(action)
+        new_board.place_ship(*action)
         return BimaruState(new_board)
 
     # TODO: outros metodos da classe
@@ -191,6 +191,9 @@ class Board:
         """Places a water tile on the given position."""
         if (self.is_free(row, column)):
             self.board[row, column] = letter;
+            return True
+        else:
+            return False
 
     def complete_board_after_hints(self):
         """Completa o tabuleiro a partir de conclusões que pode tirar
@@ -236,7 +239,8 @@ class Board:
         return actions
 
     def place_part(self, part, row, col):
-        self.try_place(part, row, col)
+        if not self.try_place(part, row, col):
+            raise Exception("Could not place part")
 
         self.fill_surrounding_water(row, col, part)
 
@@ -274,6 +278,7 @@ class Board:
             row += v_offset 
             col += h_offset 
             self.place_part('M', row, col)
+            placed += 1
 
         self.place_part(end, row + v_offset, col + h_offset)
 
@@ -281,11 +286,18 @@ class Board:
     def print(self):
         for i in range(10):
             for j in range(10):
-                if self.board[i, j] is not None:
+                if not self.is_free(i, j):
                     print(self.board[i, j], end='')
                 else:
                     print('*', end='')
             print()
+
+    def copy(self):
+        # Performs a deep copy of the board
+        matrix_copy = np.array([row.copy() for row in self.board])
+        return Board(matrix_copy, self.rows, self.columns,
+                     self.hints, self.remaining_ships.copy(),
+                     self.my_rows.copy(), self.my_columns.copy())
 
     @staticmethod
     def is_valid_position(pos):
