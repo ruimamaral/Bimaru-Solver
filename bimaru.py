@@ -18,6 +18,14 @@ from search import (
     recursive_best_first_search,
 )
 
+water_pos = {
+                'T': [(-1, 0), (0, 1), (0, -1)],
+                'B': [(1, 0), (0, 1), (0, -1)],
+                'R': [(-1, 0), (0, 1), (1, 0)],
+                'L': [(-1, 0), (0, -1), (1, 0)],
+                'C': [(-1, 0), (0, 1), (0, -1), (1, 0)],
+                'M': []
+            }
 
 class BimaruState:
     state_id = 0
@@ -38,7 +46,7 @@ class BimaruState:
 
 class Board:
     """Representação interna de um tabuleiro de Bimaru."""
-    def __init__(self, matrix, rows, columns):
+    def __init__(self, matrix, rows, columns, hints):
         """Construtor para o tabuleiro e informação necessária
             -> '.' = water
             -> 't' = top
@@ -57,6 +65,7 @@ class Board:
         self.my_columns = [0] * 10
         self.incomplete_hints = 0
         self.remaining_ships = [-1, 4, 3, 2, 1]
+        self.hints = hints;
 
     def get_value(self, row: int, col: int) -> str:
         """Devolve o valor na respetiva posição do tabuleiro."""
@@ -82,7 +91,7 @@ class Board:
         else:
             return (self.board[row, col-1], self.board[row, col+1])
 
-    def use_hints(self, hints):
+    #def use_hints(self, hints):
         """Completa o tabuleiro com as informações dadas nas pistas."""
         num_hints = len(hints)
         # Sorts the hints by row and column
@@ -100,42 +109,57 @@ class Board:
                 self.incomplete_hints += 1
                 self.fill_surrounding_water(row, column, letter)
 
-                if letter is 'C':
+                if letter == 'C':
                     self.remaining_ships[1] -= 1
                     self.incomplete_hints -= 1
 
                 # Checks whether we have completed a ship horizontally
-                elif letter is 'R':
+                elif letter == 'R':
                     length = 1
                     while letter in ('R', 'L', 'M'):
                         if (column - length <= 0): break
 
                         letter = self.board[row, column - length]
 
-                        if letter is 'L':
+                        if letter == 'L':
                             self.remaining_ships[length] -= 1
                             self.incomplete_hints -= length
                             break
                         length += 1
 
                 # Checks whether we have completed a ship vertically
-                elif letter is 'B':
+                elif letter == 'B':
                     length = 1
                     while letter in ('B', 'T', 'M'):
                         if (row - length <= 0): break
 
                         letter = self.board[row - length, column]
 
-                        if letter is 'T':
+                        if letter == 'T':
                             self.remaining_ships[length] -= 1
                             self.incomplete_hints -= length
                             break
                         length += 1
-                
+   
+    def use_hints(self):
+        """Places waters from the hints. Does not place down any ship parts."""
+        for hint in self.hints:
+            letter = hint[2]
+            if (letter == 'W'):
+                self.try_place('W', hint[0], hint[1])
+            else:
+                #self.try_place(letter, hint[0], hint[1])
+                self.fill_surrounding_water(hint[0], hint[1], letter)
 
     def fill_surrounding_water(self, row, column, letter):
         """Fills in the squares around a given ship part with water"""
-        #TODO 
+        # Get all the water positions for the ship part
+        pos_offsets = water_pos[letter] + [(1, 1), (-1, -1), (-1, 1), (1, -1)]
+        positions = [(row + v_off, column + h_off) for (v_off, h_off) in pos_offsets]
+
+        for pos in positions:
+            if (Board.is_valid_position(pos)):
+                self.try_place('.', *pos)
 
     def get_num_ships_in_row(self, row: int) -> int:
         """Retorna o número de navios numa determinada linha."""
@@ -148,15 +172,17 @@ class Board:
     def complete_row_with_water(self, row: int):
         """Completa uma linha do tabuleiro com zeros onde estaria None."""
         for i in range(10):
-            if self.board[row, i] is None:
-                self.board[row, i] = '.'
+            self.try_place('.', row, i)
     
     def complete_column_with_water(self, column: int):
         """Completa uma coluna do tabuleiro com zeros onde estaria None."""
         for i in range(10):
-            if self.board[i, column] is None:
-                self.board[i, column] = '.'
+            self.try_place('.', i, column)
 
+    def try_place(self, letter, row, column):
+        """Places a water tile on the given position."""
+        if (self.board[row, column] is None):
+            self.board[row, column] = letter;
 
     def complete_board_after_hints(self):
         """Completa o tabuleiro a partir de conclusões que pode tirar
@@ -174,12 +200,22 @@ class Board:
     def get_actions(self):
         """Finds all possible actions for the current board."""
         actions = [];
-        for row in range(self.rows.size()):
-            self.my_rows[row] == self.rows[row]
+        """for row in range(self.rows.size()):
+            parts = self.rows[row] - self.my_rows[row];
+            if (parts <= 0): continue
             for col in range(self.columns.size()):
-
-
-
+                remaining = parts
+                size = 1
+                letter = self.board[row][col]
+                if (letter in ['W', '.', 'R', 'M']): continue
+                if (self.board[row][col - 2] is 'L'
+                        or self.board[row][col - 1] is 'M'
+                        or self.board[row][col - 2] is 'M'
+                        and self.board[row][col - 3] in ['M', 'L']): continue
+                if (letter is 'L') {
+                    size = 2
+                }"""
+                    
     def print(self):
         for i in range(10):
             for j in range(10):
@@ -188,6 +224,10 @@ class Board:
                 else:
                     print('*', end='')
             print()
+
+    @staticmethod
+    def is_valid_position(pos):
+        return pos[0] in range(0, 10) and pos[1] in range(0, 10)
 
     @staticmethod
     def parse_instance():
@@ -209,8 +249,8 @@ class Board:
             hints.append(new_hint)
         # Create a matrix to represent the board and return a Board object
         matrix = np.full((10,10), None)
-        my_board = Board(matrix, rows, columns)
-        my_board.use_hints(hints)
+        my_board = Board(matrix, rows, columns, hints)
+        my_board.use_hints()
         return my_board
 
 
