@@ -152,7 +152,12 @@ class Board:
             letter = hint[2]
             if (letter == 'W'):
                 self.try_place('W', hint[0], hint[1])
-            else:
+            # elif (letter == 'C'):
+            #     self.try_place('C', hint[0], hint[1])
+            #     self.remaining_ships[1] -= 1
+            else: # este Else devia saltar daqui mas pronto, pq ele executa sempre, ou pelo menos devia
+                  # para garantir que o algoritmo vai respeitar as hints, ou seja que tem aguas a delinear
+                  # o barco das hints
                 #self.try_place(letter, hint[0], hint[1])
                 self.fill_surrounding_water(hint[0], hint[1], letter)
 
