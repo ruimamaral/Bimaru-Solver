@@ -54,7 +54,7 @@ class BimaruState:
 
 class Board:
     """Representação interna de um tabuleiro de Bimaru."""
-    def __init__(self, matrix, rows, columns, hints, remaining_ships = [-1, 4, 3, 2, 1], my_rows = [0] * 10, my_columns = [0] * 10):
+    def __init__(self, matrix, rows, columns, hints, remaining_ships = [-1, 4, 3, 2, 1], my_rows = [0] * 10, my_columns = [0] * 10, current_ship_size = 4):
         """Construtor para o tabuleiro e informação necessária
             -> '.' = water
             -> 't' = top
@@ -73,7 +73,7 @@ class Board:
         self.my_columns = my_columns
         self.remaining_ships = remaining_ships
         self.hints = hints;
-        self.current_ship_size = next((size for size, remain in reversed(list(enumerate(self.remaining_ships))) if remain > 0), None);
+        self.current_ship_size = current_ship_size
 
     def get_value(self, row: int, col: int) -> str:
         """Devolve o valor na respetiva posição do tabuleiro."""
@@ -223,6 +223,9 @@ class Board:
         """Finds all possible actions for the current board."""
         actions = [];
         free_tiles = 0;
+        if (self.current_ship_size == 0) {
+            return actions
+        }
 
         # check horizontal ship positions
         for row in range(10):
@@ -266,16 +269,17 @@ class Board:
             self.complete_column_with_water(col)
 
     def place_ship(self, orientation, row, col):
-        if self.current_ship_size == 0:
+        size = self.current_ship_size
+        if size == 0:
             raise Exception("Bad stuff happened")
 
         # Update current ship size
-        self.remaining_ships[self.current_ship_size] -= 1
-        if (self.remaining_ships[self.current_ship_size] == 0):
+        self.remaining_ships[size] -= 1
+        if (self.remaining_ships[size] == 0):
             self.current_ship_size -= 1;
         
-        if self.current_ship_size == 1:
-            self.place_part('C', row, col)
+        if size == 1:
+            self.place_part('c', row, col)
             return
 
         h_offset = 0
@@ -284,17 +288,17 @@ class Board:
 
         if orientation == "V":
             v_offset = 1
-            self.place_part('T', row, col)
-            end = 'B'
+            self.place_part('t', row, col)
+            end = 'b'
         else:
             h_offset = 1
-            self.place_part('L', row, col)
-            end = 'R'
+            self.place_part('l', row, col)
+            end = 'r'
 
-        while placed < self.current_ship_size:
+        while placed < size:
             row += v_offset 
             col += h_offset 
-            self.place_part('M', row, col)
+            self.place_part('m', row, col)
             placed += 1
 
         self.place_part(end, row + v_offset, col + h_offset)
