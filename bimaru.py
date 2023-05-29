@@ -329,9 +329,9 @@ class Board:
     def copy(self):
         # Performs a deep copy of the board
         matrix_copy = np.array([row.copy() for row in self.board])
-        return Board(matrix_copy, self.rows, self.columns,
-                     self.hints, self.remaining_ships.copy(),
-                     self.my_rows.copy(), self.my_columns.copy())
+        return Board(matrix_copy, self.rows, self.columns, self.hints,
+                     self.remaining_ships.copy(), self.my_rows.copy(),
+                     self.my_columns.copy(), self.current_ship_size)
 
     @staticmethod
     def is_valid_position(pos):
