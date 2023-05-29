@@ -39,7 +39,10 @@ class BimaruState:
         return self.id < other.id
     
     def actions(self):
-        return self.board.get_actions()
+        return self.board.get_possible_ship_positions()
+
+    def goal_test(self):
+        return self.board.is_finished()
 
     def take_action(self, action):
         new_board = self.board.copy()
@@ -70,7 +73,7 @@ class Board:
         self.my_columns = my_columns
         self.remaining_ships = remaining_ships
         self.hints = hints;
-        self.current_ship_size = next((size for size, count in reversed(list(enumerate(self.remaining_ships))) if count > 0), None);
+        self.current_ship_size = next((size for size, remain in reversed(list(enumerate(self.remaining_ships))) if remain > 0), None);
 
     def get_value(self, row: int, col: int) -> str:
         """Devolve o valor na respetiva posição do tabuleiro."""
@@ -164,6 +167,9 @@ class Board:
     def fill_surrounding_water(self, row, column, letter):
         """Fills in the squares around a given ship part with water"""
         # Get all the water positions for the ship part
+        if letter not in water_pos.keys():
+            raise Exception("Invalid letter")
+
         pos_offsets = water_pos[letter] + [(1, 1), (-1, -1), (-1, 1), (1, -1)]
         positions = [(row + v_off, column + h_off) for (v_off, h_off) in pos_offsets]
 
@@ -213,14 +219,14 @@ class Board:
                 self.complete_column_with_water(i)
         # Bloqueia espaço ao lado dos barcos
     
-    def get_actions(self):
+    def get_possible_ship_positions(self):
         """Finds all possible actions for the current board."""
         actions = [];
         free_tiles = 0;
 
         # check horizontal ship positions
         for row in range(10):
-            if self.rows - self.my_rows < self.current_ship_size:
+            if self.rows[row] - self.my_rows[row] < self.current_ship_size:
                 continue
             for col in reversed(range(10)):
                 if self.is_free(row, col):
@@ -230,9 +236,11 @@ class Board:
                 if free_tiles >= self.current_ship_size:
                     actions.append("H", row, col)
 
+        free_tiles = 0
+
         # check vertical ship positions
         for col in range(10):
-            if self.columns - self.my_columns < self.current_ship_size:
+            if self.columns[col] - self.my_columns[col] < self.current_ship_size:
                 continue
             for row in reversed(range(10)):
                 if self.is_free(row, col):
@@ -257,10 +265,14 @@ class Board:
         if (self.my_columns[row] == self.columns[col]):
             self.complete_column_with_water(col)
 
-
     def place_ship(self, orientation, row, col):
+        if current_ship_size == 0:
+            raise Exception("Bad stuff happened")
 
+        # Update current ship size
         self.remaining_ships[self.current_ship_size] -= 1
+        if (self.remaining_ships[self.current_ship_size] == 0):
+            self.current_ship_size -= 1;
         
         if self.current_ship_size == 1:
             self.place_part('C', row, col)
@@ -287,8 +299,21 @@ class Board:
 
         self.place_part(end, row + v_offset, col + h_offset)
 
+    def is_finished(self):
+        return self.current_ship_size == 0 and self.check_hints()
+
+    def check_hints(self):
+        for hint in self.hints:
+            if self.board[hint[0], hint[1]] != hint[2].lower()
+                return False
+
+        return True
 
     def print(self):
+        # Replace hints by upper case letters
+        for hint in self.hints:
+            self.board[hint[0], hint[1]] = hint[2].upper()
+
         for i in range(10):
             for j in range(10):
                 if not self.is_free(i, j):
@@ -337,41 +362,40 @@ class Bimaru(Problem):
     def __init__(self, board: Board):
         """O construtor especifica o estado inicial."""
         # É preciso incluir: binaruState, o board, e o id
-        # TODO
-        pass
+
+        self.state = BimaruState(board)
 
     def actions(self, state: BimaruState):
         """Retorna uma lista de ações que podem ser executadas a
         partir do estado passado como argumento."""
-
-        pass
+        return self.state.actions()
 
     def result(self, state: BimaruState, action):
         """Retorna o estado resultante de executar a 'action' sobre
         'state' passado como argumento. A ação a executar deve ser uma
         das presentes na lista obtida pela execução de
         self.actions(state)."""
-        # TODO
-        pass
+        return self.state.take_action(action)
 
     def goal_test(self, state: BimaruState):
         """Retorna True se e só se o estado passado como argumento é
         um estado objetivo. Deve verificar se todas as posições do tabuleiro
         estão preenchidas de acordo com as regras do problema."""
-        # TODO
-        pass
+        return self.state.goal_test()
 
     def h(self, node: Node):
         """Função heuristica utilizada para a procura A*."""
         # TODO
-        pass
+        return 0
     
     # TODO: outros metodos da classe
 
 if __name__ == "__main__":
     my_board = Board.parse_instance()
-    my_board.complete_board_after_hints()
+    #my_board.complete_board_after_hints()
     my_board.print()
+    bimaru = Bimaru(my_board)
+    
     # TODO:
     # Ler o ficheiro do standard input,
     # Usar uma técnica de procura para resolver a instância,
