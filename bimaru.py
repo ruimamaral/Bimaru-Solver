@@ -196,7 +196,7 @@ class Board:
             self.try_place('.', i, column)
 
     def is_free(self, row, column):
-        return self.matrix[row, column] is None
+        return self.board[row, column] is None
 
     def try_place(self, letter, row, column):
         """Places a water tile on the given position."""
@@ -234,7 +234,7 @@ class Board:
                 else:
                     free_tiles = 0
                 if free_tiles >= self.current_ship_size:
-                    actions.append("H", row, col)
+                    actions.append(("H", row, col))
 
         free_tiles = 0
 
@@ -248,7 +248,7 @@ class Board:
                 else:
                     free_tiles = 0
                 if free_tiles >= self.current_ship_size:
-                    actions.append("V", row, col)
+                    actions.append(("V", row, col))
         return actions
 
     def place_part(self, part, row, col):
@@ -266,7 +266,7 @@ class Board:
             self.complete_column_with_water(col)
 
     def place_ship(self, orientation, row, col):
-        if current_ship_size == 0:
+        if self.current_ship_size == 0:
             raise Exception("Bad stuff happened")
 
         # Update current ship size
@@ -304,7 +304,7 @@ class Board:
 
     def check_hints(self):
         for hint in self.hints:
-            if self.board[hint[0], hint[1]] != hint[2].lower()
+            if self.board[hint[0], hint[1]] != hint[2].lower():
                 return False
 
         return True
@@ -362,7 +362,7 @@ class Bimaru(Problem):
     def __init__(self, board: Board):
         """O construtor especifica o estado inicial."""
         # É preciso incluir: binaruState, o board, e o id
-
+        
         self.state = BimaruState(board)
 
     def actions(self, state: BimaruState):
@@ -392,10 +392,14 @@ class Bimaru(Problem):
 
 if __name__ == "__main__":
     my_board = Board.parse_instance()
-    #my_board.complete_board_after_hints()
     my_board.print()
-    bimaru = Bimaru(my_board)
-    
+    problem = Bimaru(my_board)
+    initial_state = BimaruState(my_board)
+    rui_action = problem.actions(initial_state)[0]
+    print(rui_action)
+    print("-----------------------------------------------")
+    result_state = problem.result(initial_state, problem.actions(initial_state)[0])
+    result_state.board.print()
     # TODO:
     # Ler o ficheiro do standard input,
     # Usar uma técnica de procura para resolver a instância,
