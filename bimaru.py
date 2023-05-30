@@ -19,12 +19,12 @@ from search import (
 )
 
 water_pos = {
-                'T': [(-1, 0), (0, 1), (0, -1)],
-                'B': [(1, 0), (0, 1), (0, -1)],
-                'R': [(-1, 0), (0, 1), (1, 0)],
-                'L': [(-1, 0), (0, -1), (1, 0)],
-                'C': [(-1, 0), (0, 1), (0, -1), (1, 0)],
-                'M': []
+                't': [(-1, 0), (0, 1), (0, -1)],
+                'b': [(1, 0), (0, 1), (0, -1)],
+                'r': [(-1, 0), (0, 1), (1, 0)],
+                'l': [(-1, 0), (0, -1), (1, 0)],
+                'c': [(-1, 0), (0, 1), (0, -1), (1, 0)],
+                'm': []
             }
 
 class BimaruState:
@@ -162,7 +162,7 @@ class Board:
                   # para garantir que o algoritmo vai respeitar as hints, ou seja que tem aguas a delinear
                   # o barco das hints
                 #self.try_place(letter, hint[0], hint[1])
-                self.fill_surrounding_water(hint[0], hint[1], letter)
+                self.fill_surrounding_water(hint[0], hint[1], letter.lower())
 
     def fill_surrounding_water(self, row, column, letter):
         """Fills in the squares around a given ship part with water"""
@@ -223,9 +223,8 @@ class Board:
         """Finds all possible actions for the current board."""
         actions = [];
         free_tiles = 0;
-        if (self.current_ship_size == 0) {
+        if (self.current_ship_size == 0):
             return actions
-        }
 
         # check horizontal ship positions
         for row in range(10):
@@ -285,8 +284,7 @@ class Board:
         h_offset = 0
         v_offset = 0
         placed = 2
-
-        if orientation == "V":
+        if orientation == 'V':
             v_offset = 1
             self.place_part('t', row, col)
             end = 'b'
@@ -374,7 +372,7 @@ class Bimaru(Problem):
         partir do estado passado como argumento."""
         return self.state.actions()
 
-    def result(self, state: BimaruState, action):
+    def result(self, state: BimaruState, action) -> BimaruState:
         """Retorna o estado resultante de executar a 'action' sobre
         'state' passado como argumento. A ação a executar deve ser uma
         das presentes na lista obtida pela execução de
@@ -395,17 +393,6 @@ class Bimaru(Problem):
     # TODO: outros metodos da classe
 
 if __name__ == "__main__":
-    my_board = Board.parse_instance()
-    my_board.print()
-    problem = Bimaru(my_board)
-    initial_state = BimaruState(my_board)
-    rui_action = problem.actions(initial_state)[0]
-    print(rui_action)
-    print("-----------------------------------------------")
-    result_state = problem.result(initial_state, problem.actions(initial_state)[0])
-    result_state.board.print()
-    # TODO:
-    # Ler o ficheiro do standard input,
-    # Usar uma técnica de procura para resolver a instância,
-    # Retirar a solução a partir do nó resultante,
-    # Imprimir para o standard output no formato indicado.
+    board = Board.parse_instance()
+    board.print()
+    problem = Bimaru(board)
