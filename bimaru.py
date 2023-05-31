@@ -311,17 +311,11 @@ class Board:
         self.place_part(end, row + v_offset, col + h_offset)
 
     def is_finished(self):
-        self.print()
-        print("hello")
         self.check_hints()
-        print(self.hints)
         return self.current_ship_size == 0 and self.check_hints()
 
     def check_hints(self):
         for hint in self.hints:
-            print("here")
-            print(self.board[hint[0], hint[1]])
-            #print(hint[2].lower())
             if self.board[hint[0], hint[1]] not in [hint[2].lower(), hint[2]]:
                 return False
 
@@ -329,8 +323,8 @@ class Board:
 
     def print(self):
         # Replace hints by upper case letters
-        #for hint in self.hints:
-        #    self.board[hint[0], hint[1]] = hint[2].upper()
+        for hint in self.hints:
+            self.board[hint[0], hint[1]] = hint[2].upper()
 
         for i in range(10):
             for j in range(10):
@@ -339,12 +333,6 @@ class Board:
                 else:
                     print('*', end='')
             print()
-
-        print(self.my_rows)
-        print(self.rows)
-        print(self.my_columns)
-        print(self.columns)
-        print(self.remaining_ships)
 
     def copy(self):
         # Performs a deep copy of the board
@@ -398,7 +386,6 @@ class Bimaru(Problem):
         'state' passado como argumento. A ação a executar deve ser uma
         das presentes na lista obtida pela execução de
         self.actions(state)."""
-        print(action)
         return state.take_action(action)
 
     def goal_test(self, state: BimaruState):
@@ -416,10 +403,8 @@ class Bimaru(Problem):
 
 if __name__ == "__main__":
     board = Board.parse_instance()
-    board.print()
     bim = Bimaru(board)
     goal = depth_first_tree_search(bim)
-    print(goal is None)
     if (goal is not None):
         goal.state.print_board()
 
