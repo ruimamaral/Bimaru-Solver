@@ -163,6 +163,8 @@ class Board:
                   # o barco das hints
                 #self.try_place(letter, hint[0], hint[1])
                 self.fill_surrounding_water(hint[0], hint[1], letter.lower())
+                
+        self.complete_board_after_hints()
 
     def fill_surrounding_water(self, row, column, letter):
         """Fills in the squares around a given ship part with water"""
@@ -222,7 +224,6 @@ class Board:
     def get_possible_ship_positions(self):
         """Finds all possible actions for the current board."""
         actions = [];
-        free_tiles = 0;
         if (self.current_ship_size == 0):
             return actions
 
@@ -230,6 +231,7 @@ class Board:
         for row in range(10):
             if self.rows[row] - self.my_rows[row] < self.current_ship_size:
                 continue
+            free_tiles = 0;
             for col in reversed(range(10)):
                 if self.is_free(row, col):
                     free_tiles += 1
@@ -244,6 +246,7 @@ class Board:
         for col in range(10):
             if self.columns[col] - self.my_columns[col] < self.current_ship_size:
                 continue
+            free_tiles = 0;
             for row in reversed(range(10)):
                 if self.is_free(row, col):
                     free_tiles += 1
@@ -259,12 +262,17 @@ class Board:
 
         self.fill_surrounding_water(row, col, part)
 
+        if (self.my_rows[row] == self.rows[row]):
+            raise Exception("stop")
+        if (self.my_columns[col] == self.columns[col]):
+            raise Exception("stop")
+
         self.my_rows[row] += 1
         self.my_columns[col] += 1
 
         if (self.my_rows[row] == self.rows[row]):
             self.complete_row_with_water(row)
-        if (self.my_columns[row] == self.columns[col]):
+        if (self.my_columns[col] == self.columns[col]):
             self.complete_column_with_water(col)
 
     def place_ship(self, orientation, row, col):
@@ -302,10 +310,17 @@ class Board:
         self.place_part(end, row + v_offset, col + h_offset)
 
     def is_finished(self):
+        self.print()
+        print("hello")
+        self.check_hints()
+        print(self.hints)
         return self.current_ship_size == 0 and self.check_hints()
 
     def check_hints(self):
         for hint in self.hints:
+            print("here")
+            print(self.board[hint[0], hint[1]])
+            #print(hint[2].lower())
             if self.board[hint[0], hint[1]] != hint[2].lower():
                 return False
 
@@ -313,8 +328,8 @@ class Board:
 
     def print(self):
         # Replace hints by upper case letters
-        for hint in self.hints:
-            self.board[hint[0], hint[1]] = hint[2].upper()
+        #for hint in self.hints:
+        #    self.board[hint[0], hint[1]] = hint[2].upper()
 
         for i in range(10):
             for j in range(10):
@@ -323,6 +338,12 @@ class Board:
                 else:
                     print('*', end='')
             print()
+
+        print(self.my_rows)
+        print(self.rows)
+        print(self.my_columns)
+        print(self.columns)
+        print(self.remaining_ships)
 
     def copy(self):
         # Performs a deep copy of the board
@@ -359,31 +380,31 @@ class Board:
         my_board.use_hints()
         return my_board
 
-
 class Bimaru(Problem):
     def __init__(self, board: Board):
         """O construtor especifica o estado inicial."""
         # É preciso incluir: binaruState, o board, e o id
         
-        self.state = BimaruState(board)
+        self.initial = BimaruState(board)
 
     def actions(self, state: BimaruState):
         """Retorna uma lista de ações que podem ser executadas a
         partir do estado passado como argumento."""
-        return self.state.actions()
+        return state.actions()
 
     def result(self, state: BimaruState, action) -> BimaruState:
         """Retorna o estado resultante de executar a 'action' sobre
         'state' passado como argumento. A ação a executar deve ser uma
         das presentes na lista obtida pela execução de
         self.actions(state)."""
-        return self.state.take_action(action)
+        print(action)
+        return state.take_action(action)
 
     def goal_test(self, state: BimaruState):
         """Retorna True se e só se o estado passado como argumento é
         um estado objetivo. Deve verificar se todas as posições do tabuleiro
         estão preenchidas de acordo com as regras do problema."""
-        return self.state.goal_test()
+        return state.goal_test()
 
     def h(self, node: Node):
         """Função heuristica utilizada para a procura A*."""
@@ -395,4 +416,15 @@ class Bimaru(Problem):
 if __name__ == "__main__":
     board = Board.parse_instance()
     board.print()
-    problem = Bimaru(board)
+    bim = Bimaru(board)
+    goal = depth_first_tree_search(bim)
+    print("ACABEI CORNOS")
+    print("ACABEI CORNOS")
+    print("ACABEI CORNOS")
+    print("ACABEI CORNOS")
+    print("ACABEI CORNOS")
+    print("ACABEI CORNOS")
+    print("ACABEI CORNOS")
+    print("ACABEI CORNOS")
+    print("ACABEI CORNOS")
+
