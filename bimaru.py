@@ -49,8 +49,8 @@ class BimaruState:
         new_board.place_ship(*action)
         return BimaruState(new_board)
 
-    def print_board(self):
-        self.board.print()
+    def print_board(self, last_print):
+        self.board.print(last_print)
 
     # TODO: outros metodos da classe
 
@@ -102,56 +102,6 @@ class Board:
         else:
             return (self.board[row, col-1], self.board[row, col+1])
 
-    #def use_hints(self, hints):
-        """Completa o tabuleiro com as informações dadas nas pistas."""
-        num_hints = len(hints)
-        # Sorts the hints by row and column
-        hints.sort(key=lambda hint: hint[0] * 10 + hint[1])
-
-        for i in range(num_hints):
-            row = hints[i][0]
-            column = hints[i][1]
-            letter = hints[i][2]
-
-            if letter in ('T', 'B', 'L', 'R', 'M', 'C'):
-                self.board[row, column] = letter
-                self.my_rows[row] += 1
-                self.my_columns[column] += 1
-                self.incomplete_hints += 1
-                self.fill_surrounding_water(row, column, letter)
-
-                if letter == 'C':
-                    self.remaining_ships[1] -= 1
-                    self.incomplete_hints -= 1
-
-                # Checks whether we have completed a ship horizontally
-                elif letter == 'R':
-                    length = 1
-                    while letter in ('R', 'L', 'M'):
-                        if (column - length <= 0): break
-
-                        letter = self.board[row, column - length]
-
-                        if letter == 'L':
-                            self.remaining_ships[length] -= 1
-                            self.incomplete_hints -= length
-                            break
-                        length += 1
-
-                # Checks whether we have completed a ship vertically
-                elif letter == 'B':
-                    length = 1
-                    while letter in ('B', 'T', 'M'):
-                        if (row - length <= 0): break
-
-                        letter = self.board[row - length, column]
-
-                        if letter == 'T':
-                            self.remaining_ships[length] -= 1
-                            self.incomplete_hints -= length
-                            break
-                        length += 1
-   
     def use_hints(self):
         """Places waters from the hints. Does not place down any ship parts."""
         for hint in self.hints:
@@ -263,11 +213,6 @@ class Board:
 
         self.fill_surrounding_water(row, col, part)
 
-        if (self.my_rows[row] == self.rows[row]):
-            raise Exception("stop")
-        if (self.my_columns[col] == self.columns[col]):
-            raise Exception("stop")
-
         self.my_rows[row] += 1
         self.my_columns[col] += 1
 
@@ -311,8 +256,12 @@ class Board:
         self.place_part(end, row + v_offset, col + h_offset)
 
     def is_finished(self):
-        self.check_hints()
-        return self.current_ship_size == 0 and self.check_hints()
+        if self.current_ship_size != 0 and not self.check_hints():
+            return False
+        for i in range(10):
+            if (self.rows[i] != self.my_rows[i] and self.columns[i] != self.my_columns[i]):
+                return False
+        return True
 
     def check_hints(self):
         for hint in self.hints:
@@ -321,10 +270,11 @@ class Board:
 
         return True
 
-    def print(self):
+    def print(self, last_print):
         # Replace hints by upper case letters
-        for hint in self.hints:
-            self.board[hint[0], hint[1]] = hint[2].upper()
+        if last_print:
+                for hint in self.hints:
+                        self.board[hint[0], hint[1]] = hint[2].upper()
 
         for i in range(10):
             for j in range(10):
@@ -403,9 +353,10 @@ class Bimaru(Problem):
 
 if __name__ == "__main__":
     board = Board.parse_instance()
+    # board.print(False)
+    # print("---"*10)
     bim = Bimaru(board)
     goal = depth_first_tree_search(bim)
     if (goal is not None):
-        goal.state.print_board()
-
+        goal.state.print_board(True)
 
