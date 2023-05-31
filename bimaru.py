@@ -8,6 +8,7 @@
 
 import sys
 import numpy as np
+import copy
 from search import (
     Problem,
     Node,
@@ -205,6 +206,8 @@ class Board:
                     free_tiles = 0
                 if free_tiles >= self.current_ship_size:
                     actions.append(("V", row, col))
+        if len(actions) < self.remaining_ships[self.current_ship_size]:
+            return []
         return actions
 
     def place_part(self, part, row, col):
@@ -256,7 +259,7 @@ class Board:
         self.place_part(end, row + v_offset, col + h_offset)
 
     def is_finished(self):
-        if self.current_ship_size != 0 and not self.check_hints():
+        if self.current_ship_size != 0 or not self.check_hints():
             return False
         for i in range(10):
             if (self.rows[i] != self.my_rows[i] and self.columns[i] != self.my_columns[i]):
@@ -286,10 +289,10 @@ class Board:
 
     def copy(self):
         # Performs a deep copy of the board
-        matrix_copy = np.array([row.copy() for row in self.board])
+        matrix_copy = np.array([copy.deepcopy(row) for row in self.board])
         return Board(matrix_copy, self.rows, self.columns, self.hints,
-                     self.remaining_ships.copy(), self.my_rows.copy(),
-                     self.my_columns.copy(), self.current_ship_size)
+                     copy.deepcopy(self.remaining_ships), copy.deepcopy(self.my_rows),
+                     copy.deepcopy(self.my_columns), self.current_ship_size)
 
     @staticmethod
     def is_valid_position(pos):
@@ -346,17 +349,17 @@ class Bimaru(Problem):
 
     def h(self, node: Node):
         """Função heuristica utilizada para a procura A*."""
-        # TODO
-        return 0
-    
-    # TODO: outros metodos da classe
+        heuristica = 0
+        for i in range(10):
+            for j in range(10):
+                if node.state.board.get_value(i,j) is None:
+                    heuristica += 1
+        return heuristica       
 
 if __name__ == "__main__":
     board = Board.parse_instance()
-    # board.print(False)
-    # print("---"*10)
     bim = Bimaru(board)
-    goal = depth_first_tree_search(bim)
+    goal = recursive_best_first_search(bim)
     if (goal is not None):
         goal.state.print_board(True)
 
