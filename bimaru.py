@@ -8,7 +8,6 @@
 
 import sys
 import numpy as np
-import copy
 from search import (
     Problem,
     Node,
@@ -50,8 +49,8 @@ class BimaruState:
         new_board.place_ship(*action)
         return BimaruState(new_board)
 
-    def print_board(self, last_print):
-        self.board.print(last_print)
+    def print_board(self):
+        self.board.print()
 
     # TODO: outros metodos da classe
 
@@ -108,7 +107,7 @@ class Board:
         for hint in self.hints:
             letter = hint[2]
             if (letter == 'W'):
-                self.try_place('W', hint[0], hint[1])
+                self.board[hint[0], hint[1]] = "W"
             elif (letter == 'C'):
                 self.place_part('c', hint[0], hint[1])
                 self.remaining_ships[1] -= 1
@@ -206,8 +205,6 @@ class Board:
                     free_tiles = 0
                 if free_tiles >= self.current_ship_size:
                     actions.append(("V", row, col))
-        if len(actions) < self.remaining_ships[self.current_ship_size]:
-            return []
         return actions
 
     def place_part(self, part, row, col):
@@ -233,10 +230,24 @@ class Board:
         self.remaining_ships[size] -= 1
         if (self.remaining_ships[size] == 0):
             self.current_ship_size -= 1;
+            print("Changing ship size")
+            print("Changing ship size")
+            print("Changing ship size")
+            print("Changing ship size")
+            print(self.current_ship_size)
+            print(self.remaining_ships)
         
         if size == 1:
             self.place_part('c', row, col)
             return
+
+        sum = 0
+        for sz in self.remaining_ships[size::]:
+            if (sz != 0 and sum > 0):
+                print(self.current_ship_size)
+                print(self.remaining_ships)
+                raise Exception("Bad stuff happened")
+            sum += 1
 
         h_offset = 0
         v_offset = 0
@@ -259,12 +270,10 @@ class Board:
         self.place_part(end, row + v_offset, col + h_offset)
 
     def is_finished(self):
-        if self.current_ship_size != 0 or not self.check_hints():
-            return False
-        for i in range(10):
-            if (self.rows[i] != self.my_rows[i] and self.columns[i] != self.my_columns[i]):
-                return False
-        return True
+        self.print()
+        print(self.get_possible_ship_positions())
+        print("--------------------------------")
+        return self.current_ship_size == 0 and self.check_hints()
 
     def check_hints(self):
         for hint in self.hints:
@@ -273,11 +282,10 @@ class Board:
 
         return True
 
-    def print(self, last_print):
+    def print(self):
         # Replace hints by upper case letters
-        if last_print:
-                for hint in self.hints:
-                        self.board[hint[0], hint[1]] = hint[2].upper()
+        #for hint in self.hints:
+        #    self.board[hint[0], hint[1]] = hint[2].upper()
 
         for i in range(10):
             for j in range(10):
@@ -287,12 +295,21 @@ class Board:
                     print('*', end='')
             print()
 
+        print("rows")
+        print(self.rows)
+        print(self.my_rows)
+        print()
+        print("columns")
+        print(self.columns)
+        print(self.my_columns)
+        print(self.remaining_ships)
+
     def copy(self):
         # Performs a deep copy of the board
-        matrix_copy = np.array([copy.deepcopy(row) for row in self.board])
+        matrix_copy = np.array([row.copy() for row in self.board])
         return Board(matrix_copy, self.rows, self.columns, self.hints,
-                     copy.deepcopy(self.remaining_ships), copy.deepcopy(self.my_rows),
-                     copy.deepcopy(self.my_columns), self.current_ship_size)
+                     self.remaining_ships.copy(), self.my_rows.copy(),
+                     self.my_columns.copy(), self.current_ship_size)
 
     @staticmethod
     def is_valid_position(pos):
@@ -326,12 +343,13 @@ class Bimaru(Problem):
     def __init__(self, board: Board):
         """O construtor especifica o estado inicial."""
         # É preciso incluir: binaruState, o board, e o id
-        
+        self.expansions = 0
         self.initial = BimaruState(board)
 
     def actions(self, state: BimaruState):
         """Retorna uma lista de ações que podem ser executadas a
         partir do estado passado como argumento."""
+        self.expansions += 1
         return state.actions()
 
     def result(self, state: BimaruState, action) -> BimaruState:
@@ -349,17 +367,17 @@ class Bimaru(Problem):
 
     def h(self, node: Node):
         """Função heuristica utilizada para a procura A*."""
-        heuristica = 0
-        for i in range(10):
-            for j in range(10):
-                if node.state.board.get_value(i,j) is None:
-                    heuristica += 1
-        return heuristica       
+        # TODO
+        return 0
+    
+    # TODO: outros metodos da classe
 
 if __name__ == "__main__":
     board = Board.parse_instance()
     bim = Bimaru(board)
-    goal = recursive_best_first_search(bim)
+    goal = depth_first_tree_search(bim)
     if (goal is not None):
-        goal.state.print_board(True)
+        goal.state.print_board()
+
+    print(bim.expansions)
 
