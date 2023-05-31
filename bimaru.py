@@ -49,6 +49,9 @@ class BimaruState:
         new_board.place_ship(*action)
         return BimaruState(new_board)
 
+    def print_board(self):
+        self.board.print()
+
     # TODO: outros metodos da classe
 
 
@@ -155,12 +158,10 @@ class Board:
             letter = hint[2]
             if (letter == 'W'):
                 self.try_place('W', hint[0], hint[1])
-            # elif (letter == 'C'):
-            #     self.try_place('C', hint[0], hint[1])
-            #     self.remaining_ships[1] -= 1
-            else: # este Else devia saltar daqui mas pronto, pq ele executa sempre, ou pelo menos devia
-                  # para garantir que o algoritmo vai respeitar as hints, ou seja que tem aguas a delinear
-                  # o barco das hints
+            elif (letter == 'C'):
+                self.place_part('c', hint[0], hint[1])
+                self.remaining_ships[1] -= 1
+            else: 
                 #self.try_place(letter, hint[0], hint[1])
                 self.fill_surrounding_water(hint[0], hint[1], letter.lower())
                 
@@ -321,7 +322,7 @@ class Board:
             print("here")
             print(self.board[hint[0], hint[1]])
             #print(hint[2].lower())
-            if self.board[hint[0], hint[1]] != hint[2].lower():
+            if self.board[hint[0], hint[1]] not in [hint[2].lower(), hint[2]]:
                 return False
 
         return True
@@ -418,13 +419,8 @@ if __name__ == "__main__":
     board.print()
     bim = Bimaru(board)
     goal = depth_first_tree_search(bim)
-    print("ACABEI CORNOS")
-    print("ACABEI CORNOS")
-    print("ACABEI CORNOS")
-    print("ACABEI CORNOS")
-    print("ACABEI CORNOS")
-    print("ACABEI CORNOS")
-    print("ACABEI CORNOS")
-    print("ACABEI CORNOS")
-    print("ACABEI CORNOS")
+    print(goal is None)
+    if (goal is not None):
+        goal.state.print_board()
+
 
