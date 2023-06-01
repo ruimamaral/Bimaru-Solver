@@ -39,13 +39,17 @@ class BimaruState:
         return self.id < other.id
     
     def actions(self):
-        return self.board.get_possible_ship_positions()
+        actions = self.board.get_possible_ship_positions()
+        self.print_board()
+        print(actions)
+        return actions
 
     def goal_test(self):
         return self.board.is_finished()
 
     def take_action(self, action):
         new_board = self.board.copy()
+        new_board.last_action = action
         new_board.place_ship(*action)
         return BimaruState(new_board)
 
@@ -57,7 +61,7 @@ class BimaruState:
 
 class Board:
     """Representação interna de um tabuleiro de Bimaru."""
-    def __init__(self, matrix, rows, columns, hints, remaining_ships = [-1, 4, 3, 2, 1], my_rows = [0] * 10, my_columns = [0] * 10, current_ship_size = 4):
+    def __init__(self, matrix, rows, columns, hints, remaining_ships = [-1, 4, 3, 2, 1], my_rows = [0] * 10, my_columns = [0] * 10, current_ship_size = 4, last_action = ("H", 0, 10)):
         """Construtor para o tabuleiro e informação necessária
             -> '.' = water
             -> 't' = top
@@ -77,6 +81,7 @@ class Board:
         self.remaining_ships = remaining_ships
         self.hints = hints;
         self.current_ship_size = current_ship_size
+        self.last_action = last_action
 
     def get_value(self, row: int, col: int) -> str:
         """Devolve o valor na respetiva posição do tabuleiro."""
@@ -177,34 +182,47 @@ class Board:
         actions = [];
         if (self.current_ship_size == 0):
             return actions
+        if self.last_action[0] == "H":
+            start_row = self.last_action[1]
+            last_col_index = self.last_action[2]
+            start_col = 0
+            last_row_index = 10
+        else:
+            start_col = self.last_action[2]
+            last_row_index = self.last_action[1]
+            start_row = 10
+            last_col_index = 10
 
         # check horizontal ship positions
-        for row in range(10):
+        for row in range(start_row, 10):
             if self.rows[row] - self.my_rows[row] < self.current_ship_size:
                 continue
             free_tiles = 0;
-            for col in reversed(range(10)):
+            for col in reversed(range(0, last_col_index)):
                 if self.is_free(row, col):
                     free_tiles += 1
                 else:
                     free_tiles = 0
                 if free_tiles >= self.current_ship_size:
                     actions.append(("H", row, col))
+            last_col_index = 10
 
         free_tiles = 0
 
         # check vertical ship positions
-        for col in range(10):
+        for col in range(start_col, 10):
             if self.columns[col] - self.my_columns[col] < self.current_ship_size:
                 continue
             free_tiles = 0;
-            for row in reversed(range(10)):
+            for row in reversed(range(0, last_row_index)):
                 if self.is_free(row, col):
                     free_tiles += 1
                 else:
                     free_tiles = 0
                 if free_tiles >= self.current_ship_size:
                     actions.append(("V", row, col))
+            last_row_index = 10
+        
         return actions
 
     def place_part(self, part, row, col):
@@ -230,24 +248,12 @@ class Board:
         self.remaining_ships[size] -= 1
         if (self.remaining_ships[size] == 0):
             self.current_ship_size -= 1;
-            print("Changing ship size")
-            print("Changing ship size")
-            print("Changing ship size")
-            print("Changing ship size")
-            print(self.current_ship_size)
-            print(self.remaining_ships)
+            self.last_action = ("H", 0, 10)
         
         if size == 1:
             self.place_part('c', row, col)
             return
 
-        sum = 0
-        for sz in self.remaining_ships[size::]:
-            if (sz != 0 and sum > 0):
-                print(self.current_ship_size)
-                print(self.remaining_ships)
-                raise Exception("Bad stuff happened")
-            sum += 1
 
         h_offset = 0
         v_offset = 0
@@ -270,9 +276,6 @@ class Board:
         self.place_part(end, row + v_offset, col + h_offset)
 
     def is_finished(self):
-        self.print()
-        print(self.get_possible_ship_positions())
-        print("--------------------------------")
         return self.current_ship_size == 0 and self.check_hints()
 
     def check_hints(self):
@@ -295,21 +298,14 @@ class Board:
                     print('*', end='')
             print()
 
-        print("rows")
-        print(self.rows)
-        print(self.my_rows)
-        print()
-        print("columns")
-        print(self.columns)
-        print(self.my_columns)
-        print(self.remaining_ships)
 
     def copy(self):
         # Performs a deep copy of the board
         matrix_copy = np.array([row.copy() for row in self.board])
         return Board(matrix_copy, self.rows, self.columns, self.hints,
                      self.remaining_ships.copy(), self.my_rows.copy(),
-                     self.my_columns.copy(), self.current_ship_size)
+                     self.my_columns.copy(), self.current_ship_size,
+                     self.last_action)
 
     @staticmethod
     def is_valid_position(pos):
