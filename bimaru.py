@@ -30,19 +30,27 @@ water_pos = {
 class BimaruState:
     state_id = 0
 
-    def __init__(self, board):
+    def __init__(self, board, should_print = False, sp2 = False, sp3 = False):
         self.board = board
         self.id = BimaruState.state_id
         BimaruState.state_id += 1
+        self.should_print = should_print
+        self.should_print2 = sp2
+        self.should_print3 = sp3
 
     def __lt__(self, other):
         return self.id < other.id
     
     def actions(self):
+        la = self.board.last_action
         actions = self.board.get_possible_ship_positions()
-        self.print_board()
-        print(actions)
-        print(self.board.last_action)
+        """if (self.should_print and self.should_print2 and self.board.current_ship_size == 3):
+            print(la)
+            self.print_board()
+            print(actions)
+            print(self.board.get_possible_ship_positions(True))
+            print(self.board.last_action)
+            print("--------------------------------")"""
         return actions
 
     def goal_test(self):
@@ -50,9 +58,20 @@ class BimaruState:
 
     def take_action(self, action):
         new_board = self.board.copy()
+        """should_print = False
+        should_print2 = False
+        should_print3 = False
+        if (action == ("V", 5, 9) and new_board.current_ship_size == 4):
+            should_print = True
+        if (action == ("H", 5, 1) and new_board.current_ship_size == 3 and new_board.remaining_ships[new_board.current_ship_size] == 2):
+            should_print2 = True
+        if (action == ("H", 8, 0) and new_board.current_ship_size == 3 and new_board.remaining_ships[new_board.current_ship_size] == 1):
+            should_print3 = True"""
+            
         new_board.last_action = action
         new_board.place_ship(*action)
-        return BimaruState(new_board)
+
+        return BimaruState(new_board)#, self.should_print or should_print, self.should_print2 or should_print2, self.should_print3 or should_print3)
 
     def print_board(self):
         self.board.print()
@@ -178,11 +197,12 @@ class Board:
                 self.complete_column_with_water(i)
         # Bloqueia espaço ao lado dos barcos
     
-    def get_possible_ship_positions(self):
+    def get_possible_ship_positions(self, dp = False):
         """Finds all possible actions for the current board."""
         actions = [];
         if (self.current_ship_size == 0):
             return actions
+        # Set limits as to not check positions which have already been checked
         if self.last_action[0] == "H":
             start_row = self.last_action[1]
             last_col_index = self.last_action[2]
@@ -194,9 +214,14 @@ class Board:
             start_row = 10
             last_col_index = 10
 
+        """if dp:
+            print("START ROW: ", start_row)
+            print(last_col_index)"""
+
         # check horizontal ship positions
         for row in range(start_row, 10):
             if self.rows[row] - self.my_rows[row] < self.current_ship_size:
+                last_col_index = 10
                 continue
             free_tiles = 0;
             for col in reversed(range(0, last_col_index)):
@@ -213,6 +238,7 @@ class Board:
         # check vertical ship positions
         for col in range(start_col, 10):
             if self.columns[col] - self.my_columns[col] < self.current_ship_size:
+                last_row_index = 10
                 continue
             free_tiles = 0;
             for row in reversed(range(0, last_row_index)):
@@ -255,7 +281,6 @@ class Board:
         if size == 1:
             self.place_part('c', row, col)
             return
-
 
         h_offset = 0
         v_offset = 0
@@ -300,6 +325,11 @@ class Board:
                     print('*', end='')
             print()
 
+        """print("my rows")
+        print(self.my_rows)
+        print(self.rows)
+        print(self.my_columns)
+        print(self.columns)"""
 
     def copy(self):
         # Performs a deep copy of the board
