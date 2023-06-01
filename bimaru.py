@@ -42,6 +42,7 @@ class BimaruState:
         actions = self.board.get_possible_ship_positions()
         self.print_board()
         print(actions)
+        print(self.board.last_action)
         return actions
 
     def goal_test(self):
@@ -222,7 +223,8 @@ class Board:
                 if free_tiles >= self.current_ship_size:
                     actions.append(("V", row, col))
             last_row_index = 10
-        
+        if len(actions) < self.remaining_ships[self.current_ship_size]:
+            return [] 
         return actions
 
     def place_part(self, part, row, col):
