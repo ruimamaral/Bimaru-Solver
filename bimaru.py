@@ -8,6 +8,7 @@
 
 import sys
 import numpy as np
+import cProfile
 from search import (
     Problem,
     Node,
@@ -57,7 +58,7 @@ class BimaruState:
 
 class Board:
     """Representação interna de um tabuleiro de Bimaru."""
-    def __init__(self, matrix, rows, columns, hints, remaining_ships = [-1, 4, 3, 2, 1], my_rows = [0] * 10, my_columns = [0] * 10, current_ship_size = 4):
+    def __init__(self, matrix, rows, columns, hints, remaining_ships = [-1, 4, 3, 2, 1], my_rows = [0] * 10, my_columns = [0] * 10, current_ship_size = 4, rows_to_look_at = [i for i in range(10)], columns_to_look_at = [i for i in range(10)]):
         """Construtor para o tabuleiro e informação necessária
             -> '.' = water
             -> 't' = top
@@ -74,6 +75,8 @@ class Board:
         self.columns = columns
         self.my_rows = my_rows
         self.my_columns = my_columns
+        self.rows_to_look_at = rows_to_look_at
+        self.columns_to_look_at = columns_to_look_at
         self.remaining_ships = remaining_ships
         self.hints = hints;
         self.current_ship_size = current_ship_size
@@ -179,7 +182,7 @@ class Board:
             return actions
 
         # check horizontal ship positions
-        for row in range(10):
+        for row in self.rows_to_look_at:
             if self.rows[row] - self.my_rows[row] < self.current_ship_size:
                 continue
             free_tiles = 0;
@@ -194,7 +197,7 @@ class Board:
         free_tiles = 0
 
         # check vertical ship positions
-        for col in range(10):
+        for col in self.columns_to_look_at:
             if self.columns[col] - self.my_columns[col] < self.current_ship_size:
                 continue
             free_tiles = 0;
@@ -219,8 +222,10 @@ class Board:
         self.my_columns[col] += 1
 
         if (self.my_rows[row] == self.rows[row]):
+            self.rows_to_look_at.remove(row)
             self.complete_row_with_water(row)
         if (self.my_columns[col] == self.columns[col]):
+            self.columns_to_look_at.remove(col)
             self.complete_column_with_water(col)
 
     def place_ship(self, orientation, row, col):
@@ -232,24 +237,10 @@ class Board:
         self.remaining_ships[size] -= 1
         if (self.remaining_ships[size] == 0):
             self.current_ship_size -= 1;
-            print("Changing ship size")
-            print("Changing ship size")
-            print("Changing ship size")
-            print("Changing ship size")
-            print(self.current_ship_size)
-            print(self.remaining_ships)
         
         if size == 1:
             self.place_part('c', row, col)
             return
-
-        sum = 0
-        for sz in self.remaining_ships[size::]:
-            if (sz != 0 and sum > 0):
-                print(self.current_ship_size)
-                print(self.remaining_ships)
-                raise Exception("Bad stuff happened")
-            sum += 1
 
         h_offset = 0
         v_offset = 0
@@ -272,9 +263,6 @@ class Board:
         self.place_part(end, row + v_offset, col + h_offset)
 
     def is_finished(self):
-        self.print()
-        print(self.get_possible_ship_positions())
-        print("--------------------------------")
         return self.current_ship_size == 0 and self.check_hints()
 
     def check_hints(self):
@@ -297,25 +285,16 @@ class Board:
                     print('*', end='')
             print()
 
-        print("rows")
-        print(self.rows)
-        print(self.my_rows)
-        print()
-        print("columns")
-        print(self.columns)
-        print(self.my_columns)
-        print(self.remaining_ships)
-
     def copy(self):
         # Performs a deep copy of the board
         matrix_copy = np.array([row.copy() for row in self.board])
         return Board(matrix_copy, self.rows, self.columns, self.hints,
                      self.remaining_ships.copy(), self.my_rows.copy(),
-                     self.my_columns.copy(), self.current_ship_size)
+                     self.my_columns.copy(), self.current_ship_size, self.rows_to_look_at.copy(), self.columns_to_look_at.copy())
 
     @staticmethod
     def is_valid_position(pos):
-        return pos[0] in range(0, 10) and pos[1] in range(0, 10)
+        return -1 < pos[0] < 10 and -1 < pos[1] < 10
 
     @staticmethod
     def parse_instance():
