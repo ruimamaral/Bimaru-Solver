@@ -44,13 +44,6 @@ class BimaruState:
     def actions(self):
         la = self.board.last_action
         actions = self.board.get_possible_ship_positions()
-        """if (self.should_print and self.should_print2 and self.board.current_ship_size == 3):
-            print(la)
-            self.print_board()
-            print(actions)
-            print(self.board.get_possible_ship_positions(True))
-            print(self.board.last_action)
-            print("--------------------------------")"""
         return actions
 
     def goal_test(self):
@@ -58,20 +51,9 @@ class BimaruState:
 
     def take_action(self, action):
         new_board = self.board.copy()
-        """should_print = False
-        should_print2 = False
-        should_print3 = False
-        if (action == ("V", 5, 9) and new_board.current_ship_size == 4):
-            should_print = True
-        if (action == ("H", 5, 1) and new_board.current_ship_size == 3 and new_board.remaining_ships[new_board.current_ship_size] == 2):
-            should_print2 = True
-        if (action == ("H", 8, 0) and new_board.current_ship_size == 3 and new_board.remaining_ships[new_board.current_ship_size] == 1):
-            should_print3 = True"""
-            
         new_board.last_action = action
         new_board.place_ship(*action)
-
-        return BimaruState(new_board)#, self.should_print or should_print, self.should_print2 or should_print2, self.should_print3 or should_print3)
+        return BimaruState(new_board)
 
     def print_board(self):
         self.board.print()
@@ -214,9 +196,6 @@ class Board:
             start_row = 10
             last_col_index = 10
 
-        """if dp:
-            print("START ROW: ", start_row)
-            print(last_col_index)"""
 
         # check horizontal ship positions
         for row in range(start_row, 10):
@@ -314,8 +293,8 @@ class Board:
 
     def print(self):
         # Replace hints by upper case letters
-        #for hint in self.hints:
-        #    self.board[hint[0], hint[1]] = hint[2].upper()
+        for hint in self.hints:
+            self.board[hint[0], hint[1]] = hint[2].upper()
 
         for i in range(10):
             for j in range(10):
@@ -325,11 +304,6 @@ class Board:
                     print('*', end='')
             print()
 
-        """print("my rows")
-        print(self.my_rows)
-        print(self.rows)
-        print(self.my_columns)
-        print(self.columns)"""
 
     def copy(self):
         # Performs a deep copy of the board
@@ -406,6 +380,3 @@ if __name__ == "__main__":
     goal = depth_first_tree_search(bim)
     if (goal is not None):
         goal.state.print_board()
-
-    print(bim.expansions)
-
